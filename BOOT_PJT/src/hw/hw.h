@@ -17,15 +17,8 @@
 #include "button.h"
 #include "cli.h"
 #include "gpio.h"
-#include "sd.h"
-#include "fatfs.h"
 #include "rtc.h"
 #include "reset.h"
-#include "spi.h"
-#include "socket.h"
-#include "modbus.h"
-#include "ModProt_HMI.h"
-#include "ModProt.h"
 #include "log.h"
 
 

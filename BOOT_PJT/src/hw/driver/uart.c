@@ -14,8 +14,7 @@
 #include "cdc.h"
 #include "qbuffer.h"
 #include "cli.h"
-#include "modbus.h"
-#include "ModProt.h"
+
 
 
 uart_tbl_t uart_tbl[UART_MAX_CH];         // static 선언 하면 hw falut 생성됨 // 모드버스에서 사용됨 //
@@ -24,6 +23,7 @@ uart_tbl_t uart_tbl[UART_MAX_CH];         // static 선언 하면 hw falut 생�
 static uint8_t rx_buf[UART_MAX_CH -1][UART_MAX_BUF_SIZE];; //  buf for qbuffer    // CLI
 static uint8_t tx_buf[UART_MAX_CH -1][UART_MAX_BUF_SIZE];
 
+#include "hw.h"
 
 //static uint8_t rx_data[UART_MAX_CH];      //  buf for interrupt  // CLI
 
@@ -41,7 +41,6 @@ static void cliUart(cli_args_t *args);
 
 #endif
 
-data_t data;
 
 
 bool uartInit(void)
@@ -81,7 +80,7 @@ bool uartOpen(uint8_t ch, uint32_t baud)
 
 	  break;
 
-    case _DEF_UART2:
+    case _DEF_UART2: // RTU //
 
     	uart_tbl[ch].p_huart 		 = &huart1;
     	uart_tbl[ch].is_open 		 = true;
@@ -216,8 +215,8 @@ uint8_t  uartRead(uint8_t ch)
      break;
 
      case _DEF_UART2:
-    	 data.bRx2Buff[BufIndexGet()] = (huart1.Instance->DR & 0x00FF);
-    	 ret = true;
+//    	 data.bRx2Buff[BufIndexGet()] = (huart1.Instance->DR & 0x00FF);
+//    	 ret = true;
      break;
 
      case _DEF_UART3:
@@ -245,19 +244,19 @@ uint32_t uartWrite(uint8_t ch, uint8_t *p_data, uint32_t length)
 
     case _DEF_UART2:
 
-    	_485_TX_ENB;
-    	//status =  HAL_UART_Transmit_IT(&huart1, p_data, length);
-    	status =  HAL_UART_Transmit_DMA(&huart1, p_data, length);
-
-			if(status == HAL_OK)
-			{
-				ret = true;
-			}
+//    	_485_TX_ENB;
+//    	//status =  HAL_UART_Transmit_IT(&huart1, p_data, length);
+//    	status =  HAL_UART_Transmit_DMA(&huart1, p_data, length);
+//
+//			if(status == HAL_OK)
+//			{
+//				ret = true;
+//			}
 		break;
 
     case _DEF_UART3:
 
-    	__485_CLI_TX_ENB;
+    	//__485_CLI_TX_ENB;
 
 	#if 0 // case 1  // Tx polling
     	status = HAL_UART_Transmit(uart_tbl[ch].p_huart, p_data, length, 100);
@@ -308,7 +307,7 @@ uint32_t uartWrite(uint8_t ch, uint8_t *p_data, uint32_t length)
 		  {
 		  	tx_buf[0][i] = p_data[i];
 		  }
-
+		  __485_CLI_TX_ENB;
 		  status = HAL_UART_Transmit_DMA(uart_tbl[ch].p_huart, &tx_buf[0][0], length);
 
 		  if (status == HAL_OK)
@@ -357,7 +356,7 @@ uint32_t uartGetBaud(uint8_t ch)
     break;
 
     case _DEF_UART2:
-    	ret = huart1.Init.BaudRate;
+//    	ret = huart1.Init.BaudRate;
 		break;
 
     case _DEF_UART3:
@@ -403,18 +402,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-	 if (huart->Instance == USART1)
-	 {
-		 //-- Check for INT Counter -- //
-		 //   Tx_INT_Cnt++;
-		 //   cliPrintf("TXCP %d\n",Tx_INT_Cnt );
-
-	   __HAL_UART_CLEAR_FLAG(&huart1,UART_FLAG_RXNE);
-		 __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);
-
-		 _485_RX_ENB;
-
-	 }
+//	 if (huart->Instance == USART1) //RTU
+//	 {
+//		 //-- Check for INT Counter -- //
+//		 //   Tx_INT_Cnt++;
+//		 //   cliPrintf("TXCP %d\n",Tx_INT_Cnt );
+//
+//	   __HAL_UART_CLEAR_FLAG(&huart1,UART_FLAG_RXNE);
+//		 __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);
+//
+//		 _485_RX_ENB;
+//
+//	 }
 
    if(huart->Instance == USART2)
   {
@@ -431,31 +430,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 
 }
 
-
-
-/* RTU USART1
-__HAL_RCC_USART1_CLK_ENABLE();
-__HAL_RCC_DMA2_CLK_ENABLE();
-*/
-/**USART1 GPIO Configuration
-PA15     ------> USART1_TX
-PB3     ------> USART1_RX
-
-HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 4, 0);
-HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
-*/
-
-/*  CLI USART2
-
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-
-  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 7, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
-
-  HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 7, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
-  */
 
 
 
@@ -649,8 +623,8 @@ static void cliUart(cli_args_t *args)
   if(args->argc == 1 && args->isStr(0, "info") == true) //여기서 설정한 toggle 과 동일 문자가 입력하면 아래 Loop가 실행됨//
   {
 
-  	uartPrintf(_DEF_UART1, "Uart(485) BaudRate : %d\n", uartGetBaud(_DEF_UART2));
-  	uartPrintf(_DEF_UART1, "ID    : DEC: %d, HEX: %x\n", STATION_ID_HMI, STATION_ID_HMI);
+  	uartPrintf(_DEF_UART3, "Uart(485) BaudRate : %d\n", uartGetBaud(_DEF_UART3));
+  	//uartPrintf(_DEF_UART1, "ID    : DEC: %d, HEX: %x\n", STATION_ID_HMI, STATION_ID_HMI);
 
   	ret = true;
   }
@@ -660,7 +634,7 @@ static void cliUart(cli_args_t *args)
 
   	baudrate  = (uint32_t) args->getData(1);
 
-  	uartOpen(_DEF_UART2, baudrate);
+  	uartOpen(_DEF_UART3, baudrate);
 
   	ret = true;
   }
@@ -668,8 +642,8 @@ static void cliUart(cli_args_t *args)
   if(args->argc == 1 && args->isStr(0, "reset") == true) //여기서 설정한 toggle 과 동일 문자가 입력하면 아래 Loop가 실행됨//
   {
 
-    HAL_UART_Init(uart_tbl[1].p_huart);
-  	uartPrintf(_DEF_UART1, "Uart(485) reset OK\n");
+    HAL_UART_Init(uart_tbl[2].p_huart);
+  	uartPrintf(_DEF_UART3, "Uart(485) reset OK\n");
 
   	ret = true;
   }

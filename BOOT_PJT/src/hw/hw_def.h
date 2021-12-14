@@ -25,9 +25,9 @@
 #define _USE_HW_RESET
 #define _USE_HW_USB
 #define _USE_HW_CLI
-#define _USE_HW_USB
-#define _USE_HW_SD
-#define _USE_HW_FATFS
+//#define _USE_HW_USB
+//#define _USE_HW_SD
+///#define _USE_HW_FATFS
 #define _USE_HW_FLASH
 #define _USE_HW_RTC
 #define _USE_HW_RESET
@@ -47,10 +47,10 @@
 #define _USE_HW_GPIO
 #define      HW_GPIO_MAX_CH  				4
 
-#define _PIN_GPIO_SDCARD_DETECT     0 // ch 0 : SD DC
+//#define _PIN_GPIO_SDCARD_DETECT     0 // ch 0 : SD DC
 
-#define _USE_HW_SPI
-#define      HW_SPI_MAX_CH    1  //1: Wiz5500 //
+//#define _USE_HW_SPI
+//#define      HW_SPI_MAX_CH    1  //1: Wiz5500 //
 
 #define _USE_HW_LOG
 #define      HW_LOG_CH              _DEF_UART1 // CLI채널과 같아야함 //
@@ -60,6 +60,6 @@
 #define FLASH_USER_START_ADDR (uint32_t)0x0800EFEA
 #define FLASH_USER_LENGTH 32
 
-#define _USE_HW_W5500
+//#define _USE_HW_W5500
 
 #endif /* SRC_HW_HW_DEF_H_ */

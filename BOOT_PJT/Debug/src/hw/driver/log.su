@@ -1,0 +1,8 @@
+log.c:56:6:logInit	8	static
+log.c:82:6:logEnable	4	static
+log.c:87:6:logDisable	4	static
+log.c:92:6:logBoot	16	static
+log.c:97:6:logOpen	16	static
+log.c:105:6:logBufPrintf	48	static
+log.c:134:6:logPrintf	16	static
+log.c:162:6:cliCmd	40	static
