@@ -7,67 +7,123 @@
 
 
 #include "ap.h"
-#include "log.h"
 
 
+cmd_t cmd;
 
 
 void apInit(void)
 {
-	//  cliOpen(_DEF_UART1, 57600);
-	 uartOpen(_DEF_UART2, 57600);
-	 cliOpen(_DEF_UART3, 57600);
+  logPrintf("stm32cli v1.0\n\n");
+
+  cliOpen(_DEF_UART1, 57600); // CLI는  채널1로 정의(키보드)
+
+  cmdInit(&cmd);
 }
 
-UART_HandleTypeDef huart2;
-
-uint16_t count;
-
-void apMain(void)
+void apMain(int argc, char *argv[])
 {
-  uint32_t pre_time;
-  uint32_t led_blink_time = 1000;
+  uint8_t  uart_ch;
+  char    *uart_port;
+  uint32_t uart_baud;
 
 
-  pre_time = millis();
-
-  if(resetGetCount() >= 2)
+  if (argc != 3)
   {
-    led_blink_time = 200;
+    logPrintf("wrong args\n");
+    apExit();
   }
 
+  uart_ch   = _DEF_UART2;
+  uart_port = argv[1];
+  uart_baud = (int32_t)strtoul(argv[2], (char **)NULL, (int) 0);
 
-	while(1)
-	{
-		if(millis()-pre_time >= led_blink_time) //
-		{
-			pre_time = millis();
-		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-		}
-	#if 0
-	  if(uartAvailable(_DEF_UART3) > 0)
-	  {
-			uint8_t rx_data;
-			pre_time = millis();
+  logPrintf("uart ch   : %d\n", uart_ch);
+  logPrintf("uart port : %s\n", uart_port);
+  logPrintf("uart baud : %d bps\n", uart_baud);
 
-			rx_data = uartRead(_DEF_UART3);
+  if (uartOpenPort(uart_ch, uart_port, uart_baud) == true)
+  {
+    logPrintf("uart open : OK\n");
+  }
+  else
+  {
+    logPrintf("uart open : Fail\n");
+    apExit();
+  }
 
-			uartPrintf(_DEF_UART3, "RxData1111222233334444444444555555555555 : %c 0x%x\n", rx_data, rx_data);
-
-			uartPrintf(_DEF_UART3, "Time %d ms\n", millis()-pre_time );
-
-			count++;
-			logPrintf("No.%d  Time Date   \t: %s: %s \r\n", count, __TIME__,__DATE__ );
+  cmdOpen(&cmd, _DEF_UART2, 57600); // MCU와 통신할 채널2 포트 // node는 cmd 구조체로 정의 //
 
 
-	  }
-	#endif
+  while(1)
+  {
+#if 1
+    cliMain();
+#else
 
+    if (uartAvailable(_DEF_UART1) > 0)
+    {
+      uint8_t rx_data;
 
+      rx_data = uartRead(_DEF_UART1);
 
-		cliMain();
+      if (rx_data == '1')
+      {
+        uint8_t tx_data;
 
-	}
+        tx_data = 1;
+        if (cmdSendCmdRxResp(&cmd, 0x10, &tx_data, 1, 1000) == true)
+        {
+          printf("LED ON\n");
+        }
+        else
+        {
+          printf("LED ON Fail\n");
+        }
+      }
 
+      if (rx_data == '2')
+      {
+        uint8_t tx_data;
+
+        tx_data = 2;
+        if (cmdSendCmdRxResp(&cmd, 0x10, &tx_data, 1, 1000) == true)
+        {
+          printf("LED OFF\n");
+        }
+        else
+        {
+          printf("LED OFF Fail\n");
+        }
+      }
+
+      if (rx_data == '3')
+      {
+        uint8_t tx_data;
+
+        tx_data = 3;
+        if (cmdSendCmdRxResp(&cmd, 0x10, &tx_data, 1, 1000) == true)
+        {
+          printf("LED Toggle\n");
+        }
+        else
+        {
+          printf("LED Toggle Fail\n");
+        }
+      }
+    }
+#endif
+  }
 }
+
+void apExit(void)
+{
+  for (int i=0; i<UART_MAX_CH; i++)
+  {
+    uartClose(i);
+  }
+  printf("\ncli exit\n");
+  exit(0);
+}
+
 

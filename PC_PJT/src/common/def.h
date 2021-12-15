@@ -8,12 +8,20 @@
 #ifndef SRC_COMMON_DEF_H_
 #define SRC_COMMON_DEF_H_
 
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#include <conio.h>
+#include <signal.h>
+
+#if defined (__WIN32__) || (__WIN64__)
+#include <Windows.h>
+#endif
+
 
 
 #define _DEF_UART1     0
@@ -41,11 +49,7 @@
 #define _DEF_SPI3             2
 #define _DEF_SPI4             3
 
-#define _485_TX_ENB  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1,  GPIO_PIN_SET)
-#define _485_RX_ENB  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1,  GPIO_PIN_RESET)
 
-#define __485_CLI_TX_ENB  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12,  GPIO_PIN_SET)
-#define __485_CLI_RX_ENB  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12,  GPIO_PIN_RESET)
 
 
 #endif /* SRC_COMMON_DEF_H_ */

@@ -11,39 +11,25 @@
 
 
 #include "hw_def.h"
-#include "uart.h"
-#include "qbuffer.h"
+
+
 
 #ifdef _USE_HW_UART
 
 #define UART_MAX_CH          HW_UART_MAX_CH
 
 
-
 bool     uartInit(void);
 bool     uartOpen(uint8_t ch, uint32_t baud);
+bool     uartOpenPort(uint8_t ch, char *port_name, uint32_t baud);
+bool     uartClose(uint8_t ch);
 uint32_t uartAvailable(uint8_t ch);
 uint8_t  uartRead(uint8_t ch);
 uint32_t uartWrite(uint8_t ch, uint8_t *p_data, uint32_t length);
 uint32_t uartPrintf(uint8_t ch, char *fmt, ...);
 uint32_t uartGetBaud(uint8_t ch);
+void     uartSetPortName(uint8_t ch, char *port_name);
 
-typedef struct
-{
-
-  bool is_open;
-  bool is_tx_done;
-  bool is_tx_error;
-  uint8_t ch;
-  uint32_t baud;
-  qbuffer_t qbuffer;
-#if UART_MAX_CH > 1
-  UART_HandleTypeDef *p_huart;
-  DMA_HandleTypeDef  *p_hdma_rx;
-  DMA_HandleTypeDef  *p_hdma_tx;
-#endif
-
-}uart_tbl_t;
 
 
 #endif

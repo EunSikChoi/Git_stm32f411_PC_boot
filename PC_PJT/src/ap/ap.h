@@ -14,7 +14,8 @@
 
 
 void apInit(void);
-void apMain(void);
+void apMain(int argc, char *argv[]);
+void apExit(void);
 
 
 
