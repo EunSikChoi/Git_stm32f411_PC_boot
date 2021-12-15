@@ -47,10 +47,6 @@
 #define _USE_HW_GPIO
 #define      HW_GPIO_MAX_CH  				4
 
-//#define _PIN_GPIO_SDCARD_DETECT     0 // ch 0 : SD DC
-
-//#define _USE_HW_SPI
-//#define      HW_SPI_MAX_CH    1  //1: Wiz5500 //
 
 #define _USE_HW_LOG
 #define      HW_LOG_CH              _DEF_UART1 // CLI채널과 같아야함 //
