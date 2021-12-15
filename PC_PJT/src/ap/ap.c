@@ -57,7 +57,7 @@ void apMain(int argc, char *argv[])
 
   while(1)
   {
-#if 1
+#if 0
     cliMain();
 #else
 

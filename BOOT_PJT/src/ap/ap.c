@@ -10,13 +10,16 @@
 #include "log.h"
 
 
-
+cmd_t cmd;
 
 void apInit(void)
 {
-	//  cliOpen(_DEF_UART1, 57600);
-	 uartOpen(_DEF_UART2, 57600);
-	 cliOpen(_DEF_UART3, 57600);
+	//  cliOpen(_DEF_UART1, 57600); // CDC for CLI
+	// uartOpen(_DEF_UART2, 57600); //NOT USED
+	 cliOpen(_DEF_UART3, 57600);    // UART for CLI
+
+	 cmdInit(&cmd);
+	 cmdOpen(&cmd, _DEF_UART3, 57600);
 }
 
 UART_HandleTypeDef huart2;
@@ -42,7 +45,7 @@ void apMain(void)
 		if(millis()-pre_time >= led_blink_time) //
 		{
 			pre_time = millis();
-		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+		  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 		}
 	#if 0
 	  if(uartAvailable(_DEF_UART3) > 0)
@@ -64,8 +67,34 @@ void apMain(void)
 	#endif
 
 
-
+#if 0
 		cliMain();
+#else
+    if(cmdReceivePacket(&cmd) == true)
+    {
+
+      if (cmd.rx_packet.cmd == 0x10)
+      {
+
+        if(cmd.rx_packet.data[0] ==1)
+        {
+          HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // low가 on임
+        }
+        if(cmd.rx_packet.data[0] ==2)
+        {
+          HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET); // high off 임
+        }
+        if(cmd.rx_packet.data[0] ==3)
+        {
+          HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+        }
+
+        cmdSendResp(&cmd, 0x10, CMD_OK, NULL, 1); // 응답용 //
+
+      }
+    }
+
+#endif
 
 	}
 

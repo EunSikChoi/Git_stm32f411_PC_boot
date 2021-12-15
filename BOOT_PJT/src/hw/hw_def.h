@@ -60,6 +60,9 @@
 #define FLASH_USER_START_ADDR (uint32_t)0x0800EFEA
 #define FLASH_USER_LENGTH 32
 
+#define _USE_HW_CMD
+#define      HW_CMD_MAX_DATA_LENGTH (1024+8) //cmd_packet_t 데이터(6) + STX + EX 총 8//
+
 //#define _USE_HW_W5500
 
 #endif /* SRC_HW_HW_DEF_H_ */

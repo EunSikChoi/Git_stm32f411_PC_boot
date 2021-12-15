@@ -1,6 +1,0 @@
-flash.c:42:6:flashInit	8	static
-flash.c:53:6:flashErase	56	static
-flash.c:103:6:flashWrite	40	static
-flash.c:133:6:flashRead	40	static
-flash.c:147:6:flashInSector	48	static
-flash.c:193:6:cliFlash	56	static

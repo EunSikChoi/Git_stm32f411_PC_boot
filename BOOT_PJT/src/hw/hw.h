@@ -20,6 +20,7 @@
 #include "rtc.h"
 #include "reset.h"
 #include "log.h"
+#include "cmd.h"
 
 
 void hwInit(void);
