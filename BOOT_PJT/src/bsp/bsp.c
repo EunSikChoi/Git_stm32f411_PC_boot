@@ -8,7 +8,9 @@
 
 
 #include "bsp.h"
+#include "cli.h"
 
+UART_HandleTypeDef huart2;
 
 void SystemClock_Config(void);
 
@@ -20,6 +22,25 @@ void bspInit(void)
 	__HAL_RCC_GPIOH_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 
+}
+
+void bspDeInit(void)
+{
+  //usbDeInit();
+	HAL_UART_Init(&huart2);
+  HAL_RCC_DeInit();
+
+  cliOpen(_DEF_UART3, 115200);
+
+  // Disable Interrupts
+  //
+  for (int i=0; i<8; i++)
+  {
+    NVIC->ICER[i] = 0xFFFFFFFF;
+    __DSB();
+    __ISB();
+  }
+  SysTick->CTRL = 0;
 }
 
 void delay(uint32_t ms)

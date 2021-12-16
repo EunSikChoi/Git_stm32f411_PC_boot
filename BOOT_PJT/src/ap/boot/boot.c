@@ -46,6 +46,58 @@ void bootInit(void)
 
 }
 
+
+bool bootVerifyFw(void)
+{
+  uint32_t *jump_addr = (uint32_t *)(FLASH_ADDR_FW + 4);
+
+
+  if ((*jump_addr) >= FLASH_ADDR_START && (*jump_addr) <  FLASH_ADDR_END)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+//bool bootVerifyCrc(void)
+//{
+//  uint8_t *p_data;
+//  uint16_t fw_crc;
+//
+//  if (p_firm_tag->magic_number != FLASH_MAGIC_NUMBER)
+//  {
+//    return false;
+//  }
+//
+//  p_data = (uint8_t *)p_firm_tag->tag_flash_start;
+//  fw_crc = 0;
+//
+//  for (int i=0; i<p_firm_tag->tag_flash_length; i++)
+//  {
+//    utilUpdateCrc(&fw_crc, p_data[i]);
+//  }
+//
+//  if (fw_crc == p_firm_tag->tag_flash_crc)
+//  {
+//    return true;
+//  }
+//  else
+//  {
+//    return false;
+//  }
+//}
+
+void bootJumpToFw(void)
+{
+  void (**jump_func)(void) = (void (**)(void))(FLASH_ADDR_FW + 4);
+
+  bspDeInit();
+  (*jump_func)();
+}
+
 void bootProcessCmd(cmd_t *p_cmd)
 {
   switch(p_cmd->rx_packet.cmd)
@@ -76,6 +128,10 @@ void bootProcessCmd(cmd_t *p_cmd)
 
     case BOOT_CMD_FLASH_WRITE:
       bootCmdFlashWrite(p_cmd);
+      break;
+
+    case BOOT_CMD_JUMP_TO_FW:
+      bootCmdJumpToFw(p_cmd);
       break;
 
     default:
@@ -237,4 +293,25 @@ void bootCmdFlashWrite(cmd_t *p_cmd)
   }
 
   cmdSendResp(p_cmd, BOOT_CMD_FLASH_WRITE, err_code, NULL, 0);
+}
+
+void bootCmdJumpToFw(cmd_t *p_cmd)
+{
+  if (bootVerifyFw() == true)
+  {
+    //if (bootVerifyCrc() == true)
+    //{
+      cmdSendResp(p_cmd, BOOT_CMD_JUMP_TO_FW, CMD_OK, NULL, 0);
+      delay(100);
+      bootJumpToFw();
+    //}
+   // else
+   // {
+   //   cmdSendResp(p_cmd, BOOT_CMD_JUMP_TO_FW, BOOT_ERR_FW_CRC, NULL, 0);
+   // }
+  }
+  else
+  {
+    cmdSendResp(p_cmd, BOOT_CMD_JUMP_TO_FW, BOOT_ERR_INVALID_FW, NULL, 0);
+  }
 }

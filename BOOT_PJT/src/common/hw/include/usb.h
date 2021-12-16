@@ -15,6 +15,8 @@
 #ifdef _USE_HW_USB
 
 bool usbInit(void);
+void usbDeInit(void);
+
 
 #endif
 

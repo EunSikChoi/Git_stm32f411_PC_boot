@@ -238,3 +238,23 @@ uint8_t bootCmdFlashWrite(uint32_t addr, uint8_t *p_data, uint32_t length, uint3
 
   return err_code;
 }
+
+uint8_t bootCmdJumpToFw(void)
+{
+  bool ret;
+  uint8_t err_code = CMD_OK;
+  cmd_t *p_cmd = &cmd;
+
+
+  ret = cmdSendCmdRxResp(p_cmd, BOOT_CMD_JUMP_TO_FW, NULL, 0, 1000);
+  if (ret == true && p_cmd->error == CMD_OK)
+  {
+    err_code = CMD_OK;
+  }
+  else
+  {
+    err_code = p_cmd->error;
+  }
+
+  return err_code;
+}
