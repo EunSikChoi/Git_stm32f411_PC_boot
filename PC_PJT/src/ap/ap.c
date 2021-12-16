@@ -7,9 +7,9 @@
 
 
 #include "ap.h"
+#include "boot/boot.h"
 
-
-cmd_t cmd;
+//cmd_t cmd;
 
 
 void apInit(void)
@@ -18,23 +18,39 @@ void apInit(void)
 
   cliOpen(_DEF_UART1, 57600); // CLI는  채널1로 정의(키보드)
 
-  cmdInit(&cmd);
 }
 
 void apMain(int argc, char *argv[])
 {
+  bool ret;
+  uint8_t err_code;
   uint8_t  uart_ch;
   char    *uart_port;
   uint32_t uart_baud;
+  uint8_t boot_ver[32];
+  uint8_t boot_name[32];
+  uint8_t firm_ver[32];
+  uint8_t firm_name[32];
+  uint32_t pre_time;
+  uint32_t exe_time;
+  uint8_t  file_type;
+  uint32_t file_addr;
+  int32_t  file_size;
+  char     file_name[256];
+  char     dst_filename[256];
+  bool     file_run = false;
+  FILE     *fp;
+  uint8_t  arg_cnt = 0;
 
-
+  // Check 입력 문자 // stm32.exe com99 57600 3개 //
   if (argc != 3)
   {
     logPrintf("wrong args\n");
     apExit();
   }
 
-  uart_ch   = _DEF_UART2;
+  //  MCU와 연동될 노트북 COM Port 설정  //
+  uart_ch   = _DEF_UART2; // 노트북의 COM 포트 COM7, 11 등// 실제 잡히는 드라이브 port임 //
   uart_port = argv[1];
   uart_baud = (int32_t)strtoul(argv[2], (char **)NULL, (int) 0);
 
@@ -42,17 +58,16 @@ void apMain(int argc, char *argv[])
   logPrintf("uart port : %s\n", uart_port);
   logPrintf("uart baud : %d bps\n", uart_baud);
 
-  if (uartOpenPort(uart_ch, uart_port, uart_baud) == true)
-  {
-    logPrintf("uart open : OK\n");
-  }
-  else
-  {
-    logPrintf("uart open : Fail\n");
-    apExit();
-  }
+  //-- boot 시작
+	//
+	ret = bootInit(uart_ch, uart_port, uart_baud);
+	if (ret != true)
+	{
+		logPrintf("bootInit Fail\n");
+		apExit();
+	}
 
-  cmdOpen(&cmd, _DEF_UART2, 57600); // MCU와 통신할 채널2 포트 // node는 cmd 구조체로 정의 //
+	logPrintf("\n\nboot start...\n");
 
 
   while(1)
@@ -61,59 +76,52 @@ void apMain(int argc, char *argv[])
     cliMain();
 #else
 
-    if (uartAvailable(_DEF_UART1) > 0)
+    err_code = bootCmdReadBootVersion(boot_ver);
+
+    if (err_code != CMD_OK)
     {
-      uint8_t rx_data;
+      logPrintf("bootCmdReadBootVersion fail : %d\n", err_code);
 
-      rx_data = uartRead(_DEF_UART1);
-
-      if (rx_data == '1')
-      {
-        uint8_t tx_data;
-
-        tx_data = 1;
-        if (cmdSendCmdRxResp(&cmd, 0x10, &tx_data, 1, 1000) == true)
-        {
-          printf("LED ON\n");
-        }
-        else
-        {
-          printf("LED ON Fail\n");
-        }
-      }
-
-      if (rx_data == '2')
-      {
-        uint8_t tx_data;
-
-        tx_data = 2;
-        if (cmdSendCmdRxResp(&cmd, 0x10, &tx_data, 1, 1000) == true)
-        {
-          printf("LED OFF\n");
-        }
-        else
-        {
-          printf("LED OFF Fail\n");
-        }
-      }
-
-      if (rx_data == '3')
-      {
-        uint8_t tx_data;
-
-        tx_data = 3;
-        if (cmdSendCmdRxResp(&cmd, 0x10, &tx_data, 1, 1000) == true)
-        {
-          printf("LED Toggle\n");
-        }
-        else
-        {
-          printf("LED Toggle Fail\n");
-        }
-      }
     }
+    logPrintf("boot ver \t: %s\n",  boot_ver);
+
+
+    //-- 부트로더 이름 읽기
+    //
+    err_code = bootCmdReadBootName(boot_name);
+    if (err_code != CMD_OK)
+    {
+      logPrintf("bootCmdReadBootName fail : %d\n", err_code);
+      break;
+    }
+    logPrintf("boot name \t: %s\n", boot_name);
+
+
+    //-- 펌웨어 버전 읽기
+    //
+    err_code = bootCmdReadFirmVersion(firm_ver);
+    if (err_code != CMD_OK)
+    {
+      logPrintf("bootCmdReadFirmVersion fail : %d\n", err_code);
+      break;
+    }
+    logPrintf("App  ver \t: %s\n",  firm_ver);
+
+
+    //-- 펌웨어 이름 읽기
+    //
+    err_code = bootCmdReadFirmName(firm_name);
+    if (err_code != CMD_OK)
+    {
+      logPrintf("bootCmdReadFirmName fail : %d\n", err_code);
+      break;
+    }
+    logPrintf("App  name \t: %s\n", firm_name);
+
+
+    apExit();
 #endif
-  }
+  }// END WHILE LOOP //
 }
 
 void apExit(void)

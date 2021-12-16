@@ -47,5 +47,35 @@
 #define __485_CLI_TX_ENB  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12,  GPIO_PIN_SET)
 #define __485_CLI_RX_ENB  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12,  GPIO_PIN_RESET)
 
+typedef struct
+{
+  uint8_t version[32];
+  uint8_t name[32];
+} firm_version_t;
+
+typedef struct
+{
+  uint32_t magic_number;
+
+  //-- fw info
+  //
+  uint32_t addr_tag;
+  uint32_t addr_fw;
+  uint32_t size_tag;
+
+
+  //-- tag info
+  //
+  uint32_t tag_flash_type;
+  uint32_t tag_flash_start;
+  uint32_t tag_flash_end;
+  uint32_t tag_flash_length;
+  uint32_t tag_flash_crc;
+  uint32_t tag_length;
+  uint8_t  tag_date_str[32];
+  uint8_t  tag_time_str[32];
+
+} firm_tag_t;
+
 
 #endif /* SRC_COMMON_DEF_H_ */

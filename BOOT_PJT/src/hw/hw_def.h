@@ -57,8 +57,17 @@
 #define      HW_LOG_BOOT_BUF_MAX    1024
 #define      HW_LOG_LIST_BUF_MAX    2048
 
-#define FLASH_USER_START_ADDR (uint32_t)0x0800EFEA
-#define FLASH_USER_LENGTH 32
+//#define FLASH_USER_START_ADDR (uint32_t)0x0800EFEA
+//#define FLASH_USER_LENGTH 32
+
+#define FLASH_ADDR_TAG              0x8010000
+#define FLASH_ADDR_FW               0x8010400
+#define FLASH_ADDR_FW_VER           0x8010800
+
+#define FLASH_ADDR_START            0x08010000
+#define FLASH_ADDR_END              (FLASH_ADDR_START + (512-64)*1024)
+
+
 
 #define _USE_HW_CMD
 #define      HW_CMD_MAX_DATA_LENGTH (1024+8) //cmd_packet_t 데이터(6) + STX + EX 총 8//
