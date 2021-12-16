@@ -157,3 +157,37 @@ uint8_t bootCmdReadFirmName(uint8_t *p_str)
 
   return err_code;
 }
+
+uint8_t bootCmdFlashErase(uint32_t addr, uint32_t length, uint32_t timeout)
+{
+  bool ret;
+  uint8_t err_code = CMD_OK;
+  cmd_t *p_cmd = &cmd;
+  uint8_t tx_buf[8];
+
+
+  tx_buf[0] = (uint8_t)(addr >>  0);
+  tx_buf[1] = (uint8_t)(addr >>  8);
+  tx_buf[2] = (uint8_t)(addr >> 16);
+  tx_buf[3] = (uint8_t)(addr >> 24);
+
+  tx_buf[4] = (uint8_t)(length >>  0);
+  tx_buf[5] = (uint8_t)(length >>  8);
+  tx_buf[6] = (uint8_t)(length >> 16);
+  tx_buf[7] = (uint8_t)(length >> 24);
+
+
+  ret = cmdSendCmdRxResp(p_cmd, BOOT_CMD_FLASH_ERASE, tx_buf, 8, timeout);
+
+
+  if (ret == true && p_cmd->rx_packet.error == CMD_OK)
+  {
+    err_code = CMD_OK;
+  }
+  else
+  {
+    err_code = p_cmd->rx_packet.error;
+  }
+
+  return err_code;
+}
