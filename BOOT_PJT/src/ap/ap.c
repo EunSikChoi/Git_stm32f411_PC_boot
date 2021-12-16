@@ -17,10 +17,10 @@ void apInit(void)
 {
 	//  cliOpen(_DEF_UART1, 57600); // CDC for CLI
 	// uartOpen(_DEF_UART2, 57600); //NOT USED
-	 cliOpen(_DEF_UART3, 57600);    // UART for CLI
+	 cliOpen(_DEF_UART3, 115200);    // UART for CLI
 
 	 cmdInit(&cmd);
-	 cmdOpen(&cmd, _DEF_UART3, 57600);
+	 cmdOpen(&cmd, _DEF_UART3, 115200);
 }
 
 UART_HandleTypeDef huart2;

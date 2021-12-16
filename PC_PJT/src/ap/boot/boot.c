@@ -191,3 +191,50 @@ uint8_t bootCmdFlashErase(uint32_t addr, uint32_t length, uint32_t timeout)
 
   return err_code;
 }
+
+
+uint8_t bootCmdFlashWrite(uint32_t addr, uint8_t *p_data, uint32_t length, uint32_t timeout)
+{
+  bool ret;
+  uint8_t err_code = CMD_OK;
+  cmd_t *p_cmd = &cmd;
+  uint8_t *tx_buf;
+
+
+  if (length > CMD_MAX_DATA_LENGTH)
+  {
+    err_code = BOOT_ERR_BUF_OVF;
+    return err_code;
+  }
+
+  tx_buf = p_cmd->tx_packet.data;
+  //tx_buf = p_cmd->tx_packet.data; 앞에 8바이트 정보 overWrite됨. data로 해야됨 //
+
+
+  tx_buf[0] = (uint8_t)(addr >>  0);
+  tx_buf[1] = (uint8_t)(addr >>  8);
+  tx_buf[2] = (uint8_t)(addr >> 16);
+  tx_buf[3] = (uint8_t)(addr >> 24);
+
+  tx_buf[4] = (uint8_t)(length >>  0);
+  tx_buf[5] = (uint8_t)(length >>  8);
+  tx_buf[6] = (uint8_t)(length >> 16);
+  tx_buf[7] = (uint8_t)(length >> 24);
+
+  for (int i=0; i<length; i++)
+  {
+    tx_buf[8+i] = p_data[i];
+  }
+
+  ret = cmdSendCmdRxResp(p_cmd, BOOT_CMD_FLASH_WRITE, tx_buf, 8+length, timeout);
+  if (ret == true && p_cmd->error == CMD_OK)
+  {
+    err_code = CMD_OK;
+  }
+  else
+  {
+    err_code = p_cmd->error;
+  }
+
+  return err_code;
+}

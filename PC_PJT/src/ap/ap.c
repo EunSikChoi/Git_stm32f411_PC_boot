@@ -17,6 +17,8 @@ enum
   FILE_TYPE_TAG,
 };
 
+#define TX_BLOCK_LENGTH     512
+
 int32_t getFileSize(char *file_name);
 
 //cmd_t cmd;
@@ -78,8 +80,8 @@ void apMain(int argc, char *argv[])
   // Type에 다른 입력 문자 검사 //
   if (file_type == FILE_TYPE_NONE && argc != arg_cnt)
   {
-    logPrintf("stm32cli comxx 57600 type[fw:bin] 0x8010000 file_name run[0:1]\n");
-    logPrintf("stm32cli comxx 57600 type[tag] file_name\n");
+    logPrintf("stm32cli comxx 115200 type[fw:bin] 0x8010000 file_name run[0:1]\n");
+    logPrintf("stm32cli comxx 115200 type[tag] file_name\n");
     apExit();
   }
 
@@ -227,10 +229,101 @@ void apMain(int argc, char *argv[])
     }
     logPrintf("OK (%dms)\n", exe_time);
 
+    //-- Flash Write
+    //
+    if ((fp = fopen(file_name, "rb")) == NULL) // 파일 오픈. read binary //
+    {
+      logPrintf("Unable to open %s\n", file_name);
+      apExit();
+    }
 
-    apExit();
+
+    uint32_t addr;
+    uint32_t len;
+    bool     write_done = false;
+    uint8_t  tx_buf[TX_BLOCK_LENGTH];
+    uint16_t write_percent;
+    uint16_t pre_percent = 0;
+
+    addr = file_addr;
+    //file_addr : flash Write 시작주소
+    //addr  : 다음 루프에 써야할 Flash 주소
+    pre_time = millis();
+    while(1)
+    {
+      if (!feof(fp)) // 파일의 끝을 감지 // 마지막 위치 도달하면 0, 그전에는 1 리턴 //
+      {
+        len = fread(tx_buf, 1, TX_BLOCK_LENGTH, fp); // tx_buf : 파일에서 읽어 저장할 위치 , size(몇개씩), 길이 , 읽을 파일 포인터)
+
+        err_code = bootCmdFlashWrite(addr, tx_buf, len, 1000); // 256바이트 크기를 Write // feof 종료시까지 //
+        if (err_code == CMD_OK)
+        {
+          addr += len; // 다음 Write 할 주소 저장 //
+
+          write_percent = (addr-file_addr) * 100 / file_size; // (8100 - 8100)*100 /  400 = 0% , (8500 - 8100)*100 / 400 = 100%
+
+          if ((write_percent/1) != pre_percent)
+          {
+            logPrintf("flash write \t: %d%%\r", write_percent);
+            pre_percent = (write_percent/1);
+          }
+
+
+          if ((addr-file_addr) >= file_size)// 써야할 주소 - 시작주소  의미는  현재까지 쓴 데이터의 크기 의미 즉 파일크기와 현재까지 쓴 크기가 같으면 전체 Write END//
+          {
+            write_done = true; // Flash Write 종료 //
+            break;
+          }
+        }
+        else
+        {
+          logPrintf("bootCmdFlashWrite fail : 0x%x, %d\n", addr, err_code);
+          break;
+        }
+      }
+      else
+      {
+        break;
+      }
+    }
+
+    fclose(fp);
+    exe_time = millis()-pre_time;
+
+    logPrintf("\n");
+
+    if (write_done == true)
+    {
+      logPrintf("flash write \t: OK (%dms)\n", exe_time);
+
+//      if (file_run == true && file_type == FILE_TYPE_FW)
+//      {
+//        pre_time = millis();
+//        err_code = bootCmdJumpToFw();
+//        exe_time = millis()-pre_time;
+//        if (err_code == CMD_OK)
+//        {
+//          logPrintf("jump to fw \t: OK (%dms)\n", exe_time);
+//        }
+//        else
+//        {
+//          logPrintf("jump to fw \t: fail, %d\n", err_code);
+//        }
+//        bootDeInit(uart_ch);
+//      }
+    }
+    else
+    {
+      logPrintf("flash write \t: Fail \n");
+    }
+
+    break;
+
+   // apExit();
 #endif
   }// END WHILE LOOP //
+
+  apExit();
 }
 
 void apExit(void)

@@ -25,7 +25,7 @@
 #define      HW_CLI_LINE_BUF_MAX    64
 
 #define _USE_HW_CMD
-#define      HW_CMD_MAX_DATA_LENGTH 256
+#define      HW_CMD_MAX_DATA_LENGTH 1024 + 8
 
 
 
