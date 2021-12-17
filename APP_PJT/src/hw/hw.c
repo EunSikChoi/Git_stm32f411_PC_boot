@@ -7,6 +7,13 @@
 
 
 #include "hw.h"
+#include "ap.h"
+
+__attribute__((section(".version"))) firm_version_t firm_ver = // 섹션 version에 firm_ver 변수를 할당선언 의미 //
+    {
+        "B210422R2",
+        "STM32F411"
+    };
 
 void hwInit(void)
 {

@@ -33,14 +33,9 @@ static void bootCmdJumpToFw(cmd_t *p_cmd);
 static bool bootIsFlashRange(uint32_t addr_begin, uint32_t length);
 
 
-extern firm_version_t boot_ver;
+firm_version_t *p_boot_ver = (firm_version_t *)(FLASH_ADDR_BOOT_VER);
+firm_version_t *p_app_ver  = (firm_version_t *)(FLASH_ADDR_APP_VER);
 
-firm_version_t *p_boot_ver = &boot_ver;
-firm_version_t *p_firm_ver = (firm_version_t *)(FLASH_ADDR_FW_VER);
-firm_tag_t     *p_firm_tag = (firm_tag_t *)FLASH_ADDR_TAG;
-
-uint8_t firm_ver[32]  = "V12031123R2";  // 임시
-uint8_t firm_name[32] = "STM32F411V2";	// 임시
 
 void bootInit(void)
 {
@@ -50,7 +45,7 @@ void bootInit(void)
 
 bool bootVerifyFw(void)
 {
-  uint32_t *jump_addr = (uint32_t *)(FLASH_ADDR_FW + 4);
+  uint32_t *jump_addr = (uint32_t *)(FLASH_ADDR_APP + 4);
 
 
   if ((*jump_addr) >= FLASH_ADDR_START && (*jump_addr) <  FLASH_ADDR_END)
@@ -93,7 +88,7 @@ bool bootVerifyFw(void)
 
 void bootJumpToFw(void)
 {
-  void (**jump_func)(void) = (void (**)(void))(FLASH_ADDR_FW + 4);
+  void (**jump_func)(void) = (void (**)(void))(FLASH_ADDR_APP + 4);
 
   bspDeInit();
   (*jump_func)();
@@ -208,15 +203,15 @@ void bootCmdReadBootName(cmd_t *p_cmd)
 void bootCmdReadFirmVersion(cmd_t *p_cmd)
 {
  // 나중에 Flash 영역에 펌웨어 버전을 쓸 경우 사용	현재 아래는 firm_ver 배열형태로 구현한것임 //
- // cmdSendResp(p_cmd, BOOT_CMD_READ_FIRM_VERSION, CMD_OK, (uint8_t *)p_firm_ver->version, 32);
-  cmdSendResp(p_cmd, BOOT_CMD_READ_FIRM_VERSION, CMD_OK, firm_ver, 32);
+  cmdSendResp(p_cmd, BOOT_CMD_READ_FIRM_VERSION, CMD_OK, (uint8_t *)p_app_ver->version, 32);
+ // cmdSendResp(p_cmd, BOOT_CMD_READ_FIRM_VERSION, CMD_OK, firm_ver, 32);
 }
 
 void bootCmdReadFirmName(cmd_t *p_cmd)
 {
 // 나중에 Flash 영역에 펌웨어 이름을 쓸 경우 사용	현재 아래는 firm_name 배열형태로 구현한것임 //
- // cmdSendResp(p_cmd, BOOT_CMD_READ_FIRM_NAME, CMD_OK, (uint8_t *)p_firm_ver->name, 32);
-  cmdSendResp(p_cmd, BOOT_CMD_READ_FIRM_NAME, CMD_OK, firm_name, 32);
+  cmdSendResp(p_cmd, BOOT_CMD_READ_FIRM_NAME, CMD_OK, (uint8_t *)p_app_ver->name, 32);
+  //cmdSendResp(p_cmd, BOOT_CMD_READ_FIRM_NAME, CMD_OK, firm_name, 32);
 }
 
 

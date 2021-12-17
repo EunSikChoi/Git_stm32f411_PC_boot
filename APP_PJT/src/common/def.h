@@ -47,5 +47,11 @@
 #define __485_CLI_TX_ENB  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12,  GPIO_PIN_SET)
 #define __485_CLI_RX_ENB  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12,  GPIO_PIN_RESET)
 
+typedef struct
+{
+  uint8_t version[32];
+  uint8_t name[32];
+}firm_version_t;
+
 
 #endif /* SRC_COMMON_DEF_H_ */

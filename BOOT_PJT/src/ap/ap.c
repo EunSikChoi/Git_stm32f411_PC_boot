@@ -33,7 +33,8 @@ void apMain(void)
   uint32_t led_blink_time = 200;
 
 
-  // boot 점프 // Reset시 버튼이 눌려 있으면 강제로 bootjump 실행 //
+  // boot 점프 // Reset시  강제로 bootjump 실행 APP프로그램 실행 //
+  //  RESET시 버튼이 눌린 경우에는 부트점프 안
   if (buttonGetPressed(_DEF_BUTTON1) == false)
   {
     if (bootVerifyFw()  == true)
