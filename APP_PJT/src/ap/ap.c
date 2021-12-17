@@ -13,6 +13,8 @@
 
 const uint8_t spi_ch1 = _DEF_SPI1; // Wiz5500
 
+void cliBoot(cli_args_t *args);
+
 #ifdef _USE_HW_W5500
 BYTE    bTxTcpFrameSize;
 BYTE    bTxTcpFrameSend;
@@ -39,6 +41,9 @@ void apInit(void)
 	 //cliOpen(_DEF_UART1, 57600);
 	 uartOpen(_DEF_UART2, 57600);
 	 cliOpen(_DEF_UART3, 115200);
+
+	 cliAdd("boot", cliBoot);
+
 }
 
 UART_HandleTypeDef huart2;
@@ -105,5 +110,51 @@ void apMain(void)
 
 	}
 
+}
+
+void cliBoot(cli_args_t *args)
+{
+  bool ret = false;
+
+
+  if (args->argc == 1 && args->isStr(0, "info") == true)
+  {
+    firm_version_t *p_boot_ver = (firm_version_t *)(FLASH_ADDR_BOOT_VER);
+
+
+    cliPrintf("boot ver   : %s\n", p_boot_ver->version);
+    cliPrintf("boot name  : %s\n", p_boot_ver->name);
+    cliPrintf("boot param : 0x%X\n", rtcbackupRegRead(0));
+
+    ret = true;
+  }
+
+  if (args->argc == 1 && args->isStr(0, "jump_boot") == true)
+  {
+
+    resetToBoot();
+
+    ret = true;
+  }
+
+  if (args->argc == 1 && args->isStr(0, "jump_fw") == true)
+  {
+
+    rtcbackupRegWrite(1, 0);
+    ret = true;
+  }
+
+
+
+
+
+
+//
+  if (ret != true)
+  {
+    cliPrintf("boot info\n");
+    cliPrintf("boot jump_boot\n");
+    cliPrintf("boot jump_fw\n");
+  }
 }
 

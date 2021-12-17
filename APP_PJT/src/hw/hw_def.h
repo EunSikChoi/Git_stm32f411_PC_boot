@@ -17,6 +17,7 @@
 #define _DEF_FIRMWATRE_VERSION    "V211013R2"
 #define _DEF_BOARD_NAME           "STM32G431"
 
+#define FLASH_ADDR_BOOT_VER         0x08000400
 
 #define _USE_HW_CDC
 #define _USE_HW_FLASH

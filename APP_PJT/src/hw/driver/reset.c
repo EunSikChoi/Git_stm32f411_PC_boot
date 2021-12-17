@@ -12,24 +12,48 @@
 #include "rtc.h"
 
 static uint32_t reset_count = 0;
+static uint32_t run_timeout_count = 0;
+//static void resetToRunBoot(void);
+
+
+void resetISR(void)
+{
+  if( run_timeout_count > 0)
+  {
+    run_timeout_count--;
+  }
+}
 
 bool resetInit(void)
 {
   bool  ret = true;
-
+#if 0
  //Reset 핀이 눌리면//
  if(RCC->CSR & (1<<26))
  {
-   rtcbackupRegWrite(1, rtcbackupRegRead(1) + 1); // 1- 10번 주소에 Write 가능 //
+   rtcbackupRegWrite(1, rtcbackupRegRead(1) + 1);
    delay(500);
    reset_count = rtcbackupRegRead(1);
 
  }
 
  rtcbackupRegWrite(1, 0);
+#endif
 
- return ret;
+  return ret;
 
+}
+
+void resetToBoot(void)
+//void resetToRunBoot(void)
+{
+  uint32_t reg;
+
+  reg = rtcbackupRegRead(1);
+
+  reg |= (1<<0);
+  rtcbackupRegWrite(1, reg);
+  NVIC_SystemReset();
 }
 
 uint32_t resetGetCount(void)
