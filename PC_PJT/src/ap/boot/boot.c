@@ -46,7 +46,7 @@ bool bootInit(uint8_t channel, char *port_name, uint32_t baud)
 
   delay(1000);
 
-  for (int i=0; i<3; i++)
+  for (int i=0; i<3; i++) // 통신 Open을 3번 시도하고, 실패시  빠져나감 //
   {
     ret = cmdOpen(&cmd, channel, baud);
     if (ret == true)

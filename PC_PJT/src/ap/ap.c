@@ -262,10 +262,10 @@ void apMain(int argc, char *argv[])
 
           write_percent = (addr-file_addr) * 100 / file_size; // (8100 - 8100)*100 /  400 = 0% , (8500 - 8100)*100 / 400 = 100%
 
-          if ((write_percent/1) != pre_percent)
+          if ((write_percent/10) != pre_percent)
           {
             logPrintf("flash write \t: %d%%\r", write_percent);
-            pre_percent = (write_percent/1);
+            pre_percent = (write_percent/10);
           }
 
 
