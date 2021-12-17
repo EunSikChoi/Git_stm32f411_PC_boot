@@ -19,7 +19,7 @@ uint32_t millis(void);
 
 void Error_Handler(void);
 
-
+void bspDeInit(void);
 
 
 #endif /* SRC_BSP_BSP_H_ */

@@ -28,6 +28,7 @@ static void bootCmdReadFirmVersion(cmd_t *p_cmd);
 static void bootCmdReadFirmName(cmd_t *p_cmd);
 static void bootCmdFlashErase(cmd_t *p_cmd);
 static void bootCmdFlashWrite(cmd_t *p_cmd);
+static void bootCmdJumpToFw(cmd_t *p_cmd);
 
 static bool bootIsFlashRange(uint32_t addr_begin, uint32_t length);
 

@@ -7,7 +7,7 @@
 
 
 #include "ap.h"
-#include "boot/boot.h"
+#include "boot.h"
 #include "log.h"
 
 
@@ -31,6 +31,19 @@ void apMain(void)
 {
   uint32_t pre_time;
   uint32_t led_blink_time = 200;
+
+
+  // boot 점프 // Reset시 버튼이 눌려 있으면 강제로 bootjump 실행 //
+  if (buttonGetPressed(_DEF_BUTTON1) == false)
+  {
+    if (bootVerifyFw()  == true)
+    {
+      bootJumpToFw();
+
+    }
+  }
+
+
 
 
   pre_time = millis();
