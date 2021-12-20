@@ -112,6 +112,25 @@ void apMain(int argc, char *argv[])
   logPrintf("uart port : %s\n", uart_port);
   logPrintf("uart baud : %d bps\n", uart_baud);
 
+
+  //-- boot 초기화 시작
+	//
+	ret = bootInit(uart_ch, uart_port, uart_baud);
+	if (ret != true)
+	{
+		logPrintf("bootInit Fail\n");
+	}
+
+	logPrintf("\n\nboot start...\n");
+
+  // if 2 , magic key printf //
+  if(*argv[6] == '2')
+  {
+  	logPrintf("\nMagic Key Write\n\n");
+  	uartPrintf(uart_ch, "PC 5A5AA5A5");
+  	delay(1000); // wait for Boot mode change //
+  }
+
   file_addr = (uint32_t)strtoul(argv[4], (char **)NULL, (int) 0); // 변수 타입을 unsigned int long 변경 //
   logPrintf("file addr : 0x%X\n", file_addr);
 
@@ -126,7 +145,7 @@ void apMain(int argc, char *argv[])
   }
   logPrintf("file size : %d bytes\n", file_size);
 
-  if (*argv[6] == '1')
+  if (*argv[6] == '1' || *argv[6] == '2' )
   {
     file_run = true;
     logPrintf("file run  : true\n");
@@ -134,6 +153,7 @@ void apMain(int argc, char *argv[])
   else
   {
     logPrintf("file run  : false\n");
+    apExit();
   }
 
 //   지금 사용 안함 //
@@ -154,16 +174,16 @@ void apMain(int argc, char *argv[])
 //  }
 
 
-  //-- boot 초기화 시작
-	//
-	ret = bootInit(uart_ch, uart_port, uart_baud);
-	if (ret != true)
-	{
-		logPrintf("bootInit Fail\n");
-		apExit();
-	}
-
-	logPrintf("\n\nboot start...\n");
+//  //-- boot 초기화 시작
+//	//
+//	ret = bootInit(uart_ch, uart_port, uart_baud);
+//	if (ret != true)
+//	{
+//		logPrintf("bootInit Fail\n");
+//		apExit();
+//	}
+//
+//	logPrintf("\n\nboot start...\n");
 
 
   while(1)
@@ -178,6 +198,7 @@ void apMain(int argc, char *argv[])
     if (err_code != CMD_OK)
     {
       logPrintf("bootCmdReadBootVersion fail : %d\n", err_code);
+      break;
 
     }
     logPrintf("boot ver \t: %s\n",  boot_ver);

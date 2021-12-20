@@ -53,7 +53,7 @@ uint16_t count;
 void apMain(void)
 {
   uint32_t pre_time, pre_baud;
-  uint32_t led_blink_time = 2000;
+  uint32_t led_blink_time = 1000;
   uint8_t loopback_Cnt;
 	uint8_t buffer[256]= {0,};
 

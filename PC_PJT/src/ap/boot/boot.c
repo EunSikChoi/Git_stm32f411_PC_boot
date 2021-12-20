@@ -31,17 +31,11 @@ bool bootInit(uint8_t channel, char *port_name, uint32_t baud)
 
   printf("\nrun bootloader...\n");
 
-#if 0   // CDC 모드에서 boot 모드로 점프 시킬 경우에만 사용함 // 485에서는 사용 안됨 //
-  ret = uartOpen(channel, 1200);
-  if (ret == true)
-  {
+#if 0 // CDC 모드에서 boot 모드로 점프 시킬 경우에만 사용함 // 485에서는 사용 안됨 //
+
     uartPrintf(channel, "BOOT 5555AAAA");
-    uartClose(channel);
-  }
-  else
-  {
-    return false;
-  }
+    //uartClose(channel);
+
 #endif
 
   delay(1000);

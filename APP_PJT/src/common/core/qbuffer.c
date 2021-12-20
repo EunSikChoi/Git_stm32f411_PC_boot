@@ -7,12 +7,13 @@
 
 
 #include "qbuffer.h"
+#include "reset.h"
 
 
 
 
 
-
+const char *JUMP_BOOT_STR = "PC 5A5AA5A5";
 
 
 void     qbufferInit(void)
@@ -68,6 +69,9 @@ bool     qbufferWrite(qbuffer_t *p_node, uint8_t *p_data, uint32_t length)
 
   return ret;
 }
+
+static volatile  uint8_t k , y;
+
 bool qbufferRead(qbuffer_t *p_node, uint8_t *p_data, uint32_t length)
 {
   bool ret = true;
@@ -79,6 +83,25 @@ bool qbufferRead(qbuffer_t *p_node, uint8_t *p_data, uint32_t length)
     {
       p_data[i] = p_node->p_buf[p_node->out];
     }
+
+    // Magic key // app -> boot boot jump //
+    // 나중에는 TPC나 외부 통신값에 의해 활성화 해야함.
+    // 안그려면 "P"값마다 지연이 발생함
+    if(JUMP_BOOT_STR[k++] != p_data[i])
+    {
+    	k = 0;
+    }
+    else
+    {
+    	y++;
+    	delay(1); // Wait for next char //
+    }
+
+    if(y == 11)
+    {
+       resetToBoot();
+    }
+
 
     if(p_node->out != p_node->in)
     {

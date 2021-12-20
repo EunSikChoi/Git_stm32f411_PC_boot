@@ -196,7 +196,7 @@ uint32_t uartAvailable(uint8_t ch)
 
     case _DEF_UART3:
     	// update in count //
-      uart_tbl[ch].qbuffer.in = (uart_tbl[ch].qbuffer.len - uart_tbl[ch].p_hdma_rx->Instance->NDTR);
+      uart_tbl[ch].qbuffer.in = (uart_tbl[ch].qbuffer.len - uart_tbl[ch].p_hdma_rx->Instance->NDTR); //== in++
     	ret = qbufferAvailable(&uart_tbl[ch].qbuffer);
 	  break;
   }
