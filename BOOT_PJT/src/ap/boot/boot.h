@@ -32,6 +32,7 @@ void bootInit(void);
 void bootProcessCmd(cmd_t *p_cmd);
 bool bootVerifyFw(void);
 void bootJumpToFw(void);
+bool bootVerifyCrc(void);
 
 
 

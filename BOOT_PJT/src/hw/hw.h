@@ -21,6 +21,7 @@
 #include "reset.h"
 #include "log.h"
 #include "cmd.h"
+#include "util.h"
 
 
 void hwInit(void);

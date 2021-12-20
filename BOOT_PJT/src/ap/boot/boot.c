@@ -5,7 +5,7 @@
  *      Author: 82109
  */
 
-#include "boot/boot.h"
+#include "boot.h"
 
 
 
@@ -35,7 +35,7 @@ static bool bootIsFlashRange(uint32_t addr_begin, uint32_t length);
 
 firm_version_t *p_boot_ver = (firm_version_t *)(FLASH_ADDR_BOOT_VER);
 firm_version_t *p_app_ver  = (firm_version_t *)(FLASH_ADDR_APP_VER);
-
+firm_tag_t     *p_firm_tag = (firm_tag_t *)FLASH_ADDR_TAG;
 
 void bootInit(void)
 {
@@ -58,33 +58,33 @@ bool bootVerifyFw(void)
   }
 }
 
-//bool bootVerifyCrc(void)
-//{
-//  uint8_t *p_data;
-//  uint16_t fw_crc;
-//
-//  if (p_firm_tag->magic_number != FLASH_MAGIC_NUMBER)
-//  {
-//    return false;
-//  }
-//
-//  p_data = (uint8_t *)p_firm_tag->tag_flash_start;
-//  fw_crc = 0;
-//
-//  for (int i=0; i<p_firm_tag->tag_flash_length; i++)
-//  {
-//    utilUpdateCrc(&fw_crc, p_data[i]);
-//  }
-//
-//  if (fw_crc == p_firm_tag->tag_flash_crc)
-//  {
-//    return true;
-//  }
-//  else
-//  {
-//    return false;
-//  }
-//}
+bool bootVerifyCrc(void)
+{
+  uint8_t *p_data;
+  uint16_t fw_crc;
+
+  if (p_firm_tag->magic_number != FLASH_MAGIC_NUMBER)
+  {
+    return false;
+  }
+
+  p_data = (uint8_t *)p_firm_tag->tag_flash_start;
+  fw_crc = 0;
+
+  for (int i=0; i<p_firm_tag->tag_flash_length; i++)
+  {
+    utilUpdateCrc(&fw_crc, p_data[i]);
+  }
+
+  if (fw_crc == p_firm_tag->tag_flash_crc)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
 
 void bootJumpToFw(void)
 {
@@ -295,16 +295,16 @@ void bootCmdJumpToFw(cmd_t *p_cmd)
 {
   if (bootVerifyFw() == true)
   {
-    //if (bootVerifyCrc() == true)
-    //{
+    if (bootVerifyCrc() == true)
+    {
       cmdSendResp(p_cmd, BOOT_CMD_JUMP_TO_FW, CMD_OK, NULL, 0);
       delay(100);
       bootJumpToFw();
-    //}
-   // else
-   // {
-   //   cmdSendResp(p_cmd, BOOT_CMD_JUMP_TO_FW, BOOT_ERR_FW_CRC, NULL, 0);
-   // }
+    }
+    else
+    {
+      cmdSendResp(p_cmd, BOOT_CMD_JUMP_TO_FW, BOOT_ERR_FW_CRC, NULL, 0);
+    }
   }
   else
   {

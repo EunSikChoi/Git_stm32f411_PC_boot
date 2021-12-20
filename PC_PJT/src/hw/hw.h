@@ -13,6 +13,7 @@
 #include "uart.h"
 #include "cli.h"
 #include "cmd.h"
+#include "util.h"
 
 
 

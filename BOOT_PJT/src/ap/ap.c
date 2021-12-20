@@ -43,7 +43,7 @@ void apInit(void)
     //  RESET시 버튼이 눌린 경우에는 부트점프 안함 //
   	if (buttonGetPressed(_DEF_BUTTON1) == false)
   	{
-  		if (bootVerifyFw() == true) //&& bootVerifyCrc()
+      if (bootVerifyFw() == true && bootVerifyCrc() == true)
   		{
   			bootJumpToFw();
   		}

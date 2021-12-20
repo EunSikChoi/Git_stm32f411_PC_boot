@@ -19,6 +19,8 @@
 #define BOOT_ERR_WRONG_RANGE    0x04
 #define BOOT_ERR_FLASH_WRITE    0x05
 #define BOOT_ERR_BUF_OVF        0x06
+#define BOOT_ERR_INVALID_FW     0x07
+#define BOOT_ERR_FW_CRC         0x08
 
 bool bootInit(uint8_t channel, char *port_name, uint32_t baud);
 bool bootDeInit(uint8_t channel);

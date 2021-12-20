@@ -53,6 +53,8 @@ typedef struct
   uint8_t name[32];
 } firm_version_t;
 
+#define FLASH_MAGIC_NUMBER      0x5555AAAA
+
 typedef struct
 {
   uint32_t magic_number;
