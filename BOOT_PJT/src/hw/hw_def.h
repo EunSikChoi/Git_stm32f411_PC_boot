@@ -62,8 +62,9 @@
 
 #define FLASH_ADDR_TAG              0x8010000
 
-#define FLASH_ADDR_APP              0x8010000
-#define FLASH_ADDR_APP_VER          0x8010400
+#define FLASH_ADDR_APP              0x8010400
+#define FLASH_ADDR_APP_VER          0x8010800
+
 #define FLASH_ADDR_BOOT_VER         0x8000400
 
 #define FLASH_ADDR_START            0x08010000
