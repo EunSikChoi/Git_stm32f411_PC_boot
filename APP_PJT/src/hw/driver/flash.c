@@ -214,7 +214,7 @@ void cliFlash(cli_args_t *args)
 				addr   = (uint32_t)args->getData(1);
 				length = (uint32_t)args->getData(2);
 
-				if ((addr >= 0x08080001) || (addr < 0x08000000))
+				if ((addr >= 0x08080001) || (addr < 0x08010000))
 				{
 
 					cliPrintf("<< flash addr ERR >> \n");

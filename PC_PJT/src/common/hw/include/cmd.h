@@ -21,15 +21,35 @@
 
 
 #define CMD_OK                0
+#define CMD_FALSE             1
+
 
 #define CMD_DIR_M_TO_S        0
 #define CMD_DIR_S_TO_M        1
 
 
+#define CMD_STX                     0x02
+#define CMD_ETX                     0x03
+#define CMD_LENGTH									9
+#define CMD_DATA_LEN								6
+
+
+#define CMD_STATE_WAIT_STX          0
+#define CMD_CHECK_ID								1
+#define CMD_STATE_WAIT_CMD          2
+#define CMD_STATE_WAIT_DIR          3
+#define CMD_STATE_WAIT_ERROR        4
+#define CMD_STATE_WAIT_LENGTH_L     5
+#define CMD_STATE_WAIT_LENGTH_H     6
+#define CMD_STATE_WAIT_DATA         7
+#define CMD_STATE_WAIT_CHECKSUM     8
+#define CMD_STATE_WAIT_ETX          9
+
 
 typedef struct
 {
   uint8_t   cmd;
+  uint8_t   id;
   uint8_t   dir;
   uint8_t   error;
   uint16_t  length;
@@ -43,6 +63,7 @@ typedef struct
 typedef struct
 {
   uint8_t   ch;
+  uint8_t 	boot_id;
   bool      is_init;
   uint32_t  baud;
   uint8_t   state;

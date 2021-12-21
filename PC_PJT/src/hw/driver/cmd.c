@@ -5,38 +5,28 @@
  *      Author: 82109
  */
 
-
+#define _USE_PC_CMD_C 1    // 1 : PC  0 : BOOT
 
 #include "cmd.h"
 #include "uart.h"
 
-
-
-#define CMD_STX                     0x02
-#define CMD_ETX                     0x03
-
-
-#define CMD_STATE_WAIT_STX          0
-#define CMD_STATE_WAIT_CMD          1
-#define CMD_STATE_WAIT_DIR          2
-#define CMD_STATE_WAIT_ERROR        3
-#define CMD_STATE_WAIT_LENGTH_L     4
-#define CMD_STATE_WAIT_LENGTH_H     5
-#define CMD_STATE_WAIT_DATA         6
-#define CMD_STATE_WAIT_CHECKSUM     7
-#define CMD_STATE_WAIT_ETX          8
-
-
+#if _USE_PC_CMD_C
+ #include "ap.h"
+#endif
 
 
 
 void cmdInit(cmd_t *p_cmd)
 {
   p_cmd->is_init = false;
-  p_cmd->state = CMD_STATE_WAIT_STX;
+  p_cmd->state 	 = CMD_STATE_WAIT_STX;
+  p_cmd->error 	 = CMD_OK;
 
   p_cmd->rx_packet.data = &p_cmd->rx_packet.buffer[CMD_STATE_WAIT_DATA];
   p_cmd->tx_packet.data = &p_cmd->tx_packet.buffer[CMD_STATE_WAIT_DATA];
+#if _USE_PC_CMD_C
+  p_cmd->boot_id = getBootid();
+#endif
 }
 
 bool cmdOpen(cmd_t *p_cmd, uint8_t ch, uint32_t baud)
@@ -60,7 +50,6 @@ bool cmdReceivePacket(cmd_t *p_cmd)
   bool ret = false;
   uint8_t rx_data;
 
-
   if (uartAvailable(p_cmd->ch) > 0)
   {
     rx_data = uartRead(p_cmd->ch);
@@ -81,8 +70,17 @@ bool cmdReceivePacket(cmd_t *p_cmd)
     case CMD_STATE_WAIT_STX:
       if (rx_data == CMD_STX)
       {
-        p_cmd->state = CMD_STATE_WAIT_CMD;
+        p_cmd->state = CMD_CHECK_ID;
         p_cmd->rx_packet.check_sum = 0;
+      }
+      break;
+
+    case CMD_CHECK_ID:
+      if (rx_data == p_cmd->boot_id)
+      {
+      	p_cmd->rx_packet.id = rx_data;
+        p_cmd->rx_packet.check_sum ^= rx_data;
+        p_cmd->state = CMD_STATE_WAIT_CMD;
       }
       break;
 
@@ -160,9 +158,11 @@ void cmdSendCmd(cmd_t *p_cmd, uint8_t cmd, uint8_t *p_data, uint32_t length)
   uint32_t index;
 
 
+
   index = 0;
 
-  p_cmd->tx_packet.buffer[index++] = CMD_STX;  //0
+  p_cmd->tx_packet.buffer[index++] = CMD_STX;
+  p_cmd->tx_packet.buffer[index++] = p_cmd->boot_id;  // PC CLI 명령어 에서 받은 id // MCU로 송신되는 ID//
   p_cmd->tx_packet.buffer[index++] = cmd;
   p_cmd->tx_packet.buffer[index++] = CMD_DIR_M_TO_S;
   p_cmd->tx_packet.buffer[index++] = CMD_OK;
@@ -171,19 +171,19 @@ void cmdSendCmd(cmd_t *p_cmd, uint8_t cmd, uint8_t *p_data, uint32_t length)
 
   for (int i=0; i<length; i++)
   {
-    p_cmd->tx_packet.buffer[index++] = p_data[i]; //6
+    p_cmd->tx_packet.buffer[index++] = p_data[i];
   }
 
   uint8_t check_sum = 0;
 
-  for (int i=0; i<length + 5; i++)
+  for (int i=0; i<length + CMD_DATA_LEN; i++)
   {
     check_sum ^= p_cmd->tx_packet.buffer[i+1];
   }
 
-  p_cmd->tx_packet.buffer[index++] = check_sum; //7
+  p_cmd->tx_packet.buffer[index++] = check_sum;
 
-  p_cmd->tx_packet.buffer[index++] = CMD_ETX;  //8
+  p_cmd->tx_packet.buffer[index++] = CMD_ETX;
 
 //  for (int j=0; j<9; j++) // test //
 //  {
@@ -199,10 +199,10 @@ void cmdSendResp(cmd_t *p_cmd, uint8_t cmd, uint8_t err_code, uint8_t *p_data, u
 {
   uint32_t index;
 
-
   index = 0;
 
   p_cmd->tx_packet.buffer[index++] = CMD_STX;
+  p_cmd->tx_packet.buffer[index++] = p_cmd->boot_id;
   p_cmd->tx_packet.buffer[index++] = cmd;
   p_cmd->tx_packet.buffer[index++] = CMD_DIR_S_TO_M;
   p_cmd->tx_packet.buffer[index++] = err_code;
@@ -216,7 +216,7 @@ void cmdSendResp(cmd_t *p_cmd, uint8_t cmd, uint8_t err_code, uint8_t *p_data, u
 
   uint8_t check_sum = 0;
 
-  for (int i=0; i<length + 5; i++)
+  for (int i=0; i<length + CMD_DATA_LEN; i++)
   {
     check_sum ^= p_cmd->tx_packet.buffer[i+1];
   }

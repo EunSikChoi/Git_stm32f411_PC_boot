@@ -15,7 +15,130 @@
 #ifdef _USE_HW_W5500
 
 extern SPI_HandleTypeDef hspi1;
-extern wiz_NetInfo gWIZNETINFO;
+
+
+wiz_NetInfo gNETINFO_0x01 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 1},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+wiz_NetInfo gNETINFO_0x02 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 2},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+wiz_NetInfo gNETINFO_0x03 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 3},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+wiz_NetInfo gNETINFO_0x04 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 4},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+wiz_NetInfo gNETINFO_0x05 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 5},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+wiz_NetInfo gNETINFO_0x06 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 6},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+wiz_NetInfo gNETINFO_0x07 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 7},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+wiz_NetInfo gNETINFO_0x08 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 8},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+wiz_NetInfo gNETINFO_0x09 = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 9},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
+
+//default IP //
+wiz_NetInfo gWIZNETINFO = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
+
+	.ip = {192, 168, 0, 99},
+
+	.sn = {255, 255, 255, 0},
+
+	.gw = {192, 168, 0, 1},
+
+	.dns = {8, 8, 8, 8},
+
+	.dhcp = NETINFO_STATIC};
+
 
 
 static uint32_t randomKey;
@@ -78,6 +201,7 @@ void W5500_info()
 
 uint8_t W5500_init() // 초기화 함수
 {
+	uint8_t id = 0;
 	uint8_t W5500SockBufSize[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
 	uint32_t tickStart;
 
@@ -110,9 +234,69 @@ uint8_t W5500_init() // 초기화 함수
 		}
 		/*Set network information by default*/
 
+	   id =  *(uint8_t *)0x08070000;
 
+	   if(id == 0x01)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x01);
+	  	 delay(100);
 
-		wizchip_setnetinfo(&gWIZNETINFO);
+	   }
+	   else if (id == 0x02)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x02);
+	  	 delay(100);
+	   }
+	   else if (id == 0x03)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x03);
+	  	 delay(100);
+	   }
+	   else if (id == 0x04)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x04);
+	  	 delay(100);
+	   }
+	   else if (id == 0x05)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x05);
+	  	 delay(100);
+	   }
+	   else if (id == 0x06)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x06);
+	  	 delay(100);
+	   }
+	   else if (id == 0x07)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x07);
+	  	 delay(100);
+	   }
+	   else if (id == 0x08)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x08);
+	  	 delay(100);
+	   }
+	   else if (id == 0x09)
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gNETINFO_0x09);
+	  	 delay(100);
+	   }
+	   else
+	   {
+	  	 delay(100);
+	  	 wizchip_setnetinfo(&gWIZNETINFO);
+	  	 delay(100);
+	   }
 
 		tickStart = millis();
 

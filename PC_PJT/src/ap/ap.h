@@ -16,6 +16,7 @@
 void apInit(void);
 void apMain(int argc, char *argv[]);
 void apExit(void);
+uint8_t getBootid(void);
 
 
 

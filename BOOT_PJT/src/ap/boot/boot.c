@@ -6,18 +6,7 @@
  */
 
 #include "boot.h"
-
-
-
-
-#define BOOT_CMD_READ_BOOT_VERSION      0x00
-#define BOOT_CMD_READ_BOOT_NAME         0x01
-#define BOOT_CMD_READ_FIRM_VERSION      0x02
-#define BOOT_CMD_READ_FIRM_NAME         0x03
-#define BOOT_CMD_FLASH_ERASE            0x04
-#define BOOT_CMD_FLASH_WRITE            0x05
-#define BOOT_CMD_JUMP_TO_FW             0x08
-#define BOOT_CMD_LED_CONTROL            0x10
+#include "cmd.h"
 
 
 
@@ -278,7 +267,7 @@ void bootCmdFlashWrite(cmd_t *p_cmd)
   if (bootIsFlashRange(addr, length) == true)  // length는  cli에서 get한 file의 size//
   {
     // 데이터를 Write.
-    if (flashWrite(addr, &p_packet->data[8], length) != true) // 8부터가 DATA 바이트임//
+    if (flashWrite(addr, &p_packet->data[CMD_LENGTH], length) != true) // 9부터가 DATA 바이트임//
     {
       err_code = BOOT_ERR_FLASH_WRITE;
     }

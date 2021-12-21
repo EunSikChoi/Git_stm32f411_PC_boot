@@ -33,12 +33,15 @@ void apInit(void)
 
 }
 
+uint8_t boot_id;
+
 void apMain(int argc, char *argv[])
 {
 	// 변수 정의
   bool ret;
   uint8_t err_code;
   uint8_t  uart_ch;
+  uint8_t boot_flash_id[0];
   char    *uart_port;
   uint32_t uart_baud;
   uint8_t boot_ver[32];
@@ -64,7 +67,7 @@ void apMain(int argc, char *argv[])
     if (strcmp(argv[3], "fw") == 0)
     {
       file_type = FILE_TYPE_FW;
-      arg_cnt = 7;
+      arg_cnt = 8;
     }
     if (strcmp(argv[3], "bin") == 0)
     {
@@ -92,11 +95,19 @@ void apMain(int argc, char *argv[])
   uart_ch   = _DEF_UART2; // 노트북의 COM 포트 COM7, 11 등// 실제 잡히는 드라이브 port임 //
   uart_port = argv[1];
   uart_baud = (int32_t)strtoul(argv[2], (char **)NULL, (int) 0);
+  boot_id   =  (int8_t)strtoul(argv[7], (char **)NULL, (int) 0);
+
 
   logPrintf("uart ch   : %d\n", uart_ch);
   logPrintf("uart port : %s\n", uart_port);
   logPrintf("uart baud : %d bps\n", uart_baud);
+  logPrintf("boot_id   : 0x%x\n", boot_id);
 
+  if(boot_id >= 0x10 || boot_id <= 0x00) // id 기준은 0x01~0x09 범위로 제한 //
+  {
+  	logPrintf("wrong boot Id :: 0x01 ~ 0x09 \n");
+  	apExit();
+  }
 
   //-- boot 초기화 시작
 	//
@@ -104,6 +115,7 @@ void apMain(int argc, char *argv[])
 	if (ret != true)
 	{
 		logPrintf("bootInit Fail\n");
+		apExit();
 	}
 
 	logPrintf("\n\nboot start...\n");
@@ -111,9 +123,11 @@ void apMain(int argc, char *argv[])
   // if 2 , magic key printf //
   if(*argv[6] == '2')
   {
+  	boot_flash_id[0] = boot_id;
   	logPrintf("\nMagic Key Write\n\n");
   	uartPrintf(uart_ch, "PC 5A5AA5A5");
-  	delay(1000); // wait for Boot mode change //
+  	uartWrite(uart_ch, boot_flash_id, 1 ); 		// Add + 1(boot id) // total 12 byte //
+  	delay(1000); 															// wait for Boot mode change //
   }
 
   file_addr = (uint32_t)strtoul(argv[4], (char **)NULL, (int) 0); // 변수 타입을 unsigned int long 변경 //
@@ -174,6 +188,7 @@ void apMain(int argc, char *argv[])
     if (err_code != CMD_OK)
     {
       logPrintf("bootCmdReadBootVersion fail : %d\n", err_code);
+      apExit();
       break;
 
     }
@@ -186,6 +201,7 @@ void apMain(int argc, char *argv[])
     if (err_code != CMD_OK)
     {
       logPrintf("bootCmdReadBootName fail : %d\n", err_code);
+      apExit();
       break;
     }
     logPrintf("boot name \t: %s\n", boot_name);
@@ -197,6 +213,7 @@ void apMain(int argc, char *argv[])
     if (err_code != CMD_OK)
     {
       logPrintf("bootCmdReadFirmVersion fail : %d\n", err_code);
+      apExit();
       break;
     }
     logPrintf("App  ver \t: %s\n",  firm_ver);
@@ -208,9 +225,12 @@ void apMain(int argc, char *argv[])
     if (err_code != CMD_OK)
     {
       logPrintf("bootCmdReadFirmName fail : %d\n", err_code);
+      apExit();
       break;
     }
     logPrintf("App  name \t: %s\n", firm_name);
+
+
 
     //-- Flash Erase
     //
@@ -222,9 +242,11 @@ void apMain(int argc, char *argv[])
     if (err_code != CMD_OK)
     {
       logPrintf("\nbootCmdFlashErase fail : %d\n", err_code);
+      apExit();
       break;
     }
     logPrintf("OK (%dms)\n", exe_time);
+
 
     //-- Flash Write
     //
@@ -256,6 +278,7 @@ void apMain(int argc, char *argv[])
         if (err_code == CMD_OK)
         {
           addr += len; // 다음 Write 할 주소 저장 //
+          delay(100);  // 안하면 hardware Fault 진입함 //
 
           write_percent = (addr-file_addr) * 100 / file_size; // (8100 - 8100)*100 /  400 = 0% , (8500 - 8100)*100 / 400 = 100%
 
@@ -275,6 +298,7 @@ void apMain(int argc, char *argv[])
         else
         {
           logPrintf("bootCmdFlashWrite fail : 0x%x, %d\n", addr, err_code);
+          apExit();
           break;
         }
       }
@@ -305,6 +329,7 @@ void apMain(int argc, char *argv[])
         else
         {
           logPrintf("jump to fw \t: fail, %d\n", err_code);
+          apExit();
         }
         bootDeInit(uart_ch);
       }
@@ -472,6 +497,13 @@ bool addTagToBin(char *src_filename, char *dst_filename)
   free(buf);    // 잡앗던 malloc 메모리 해제하면 신규 fw 파일 만들기 종료 //
 
   return true;
+}
+
+uint8_t getBootid(void)
+{
+	uint8_t ret = 0;
+	ret = boot_id;
+	return ret;
 }
 
 

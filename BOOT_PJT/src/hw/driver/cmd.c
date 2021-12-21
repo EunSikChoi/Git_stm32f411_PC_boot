@@ -5,37 +5,28 @@
  *      Author: 82109
  */
 
-
+#define _USE_PC_CMD_C 0    // 1 : PC  0 : BOOT
 
 #include "cmd.h"
 #include "uart.h"
 
-
-
-#define CMD_STX                     0x02
-#define CMD_ETX                     0x03
-
-
-#define CMD_STATE_WAIT_STX          0
-#define CMD_STATE_WAIT_CMD          1
-#define CMD_STATE_WAIT_DIR          2  // host -> Slave , Slave ->host //
-#define CMD_STATE_WAIT_ERROR        3
-#define CMD_STATE_WAIT_LENGTH_L     4
-#define CMD_STATE_WAIT_LENGTH_H     5
-#define CMD_STATE_WAIT_DATA         6
-#define CMD_STATE_WAIT_CHECKSUM     7
-#define CMD_STATE_WAIT_ETX          8
-
+#if _USE_PC_CMD_C
+ #include "ap.h"
+#endif
 
 
 
 void cmdInit(cmd_t *p_cmd)
 {
   p_cmd->is_init = false;
-  p_cmd->state = CMD_STATE_WAIT_STX;
+  p_cmd->state 	 = CMD_STATE_WAIT_STX;
+  p_cmd->error 	 = CMD_OK;
 
   p_cmd->rx_packet.data = &p_cmd->rx_packet.buffer[CMD_STATE_WAIT_DATA];
   p_cmd->tx_packet.data = &p_cmd->tx_packet.buffer[CMD_STATE_WAIT_DATA];
+#if _USE_PC_CMD_C
+  p_cmd->boot_id = getBootid();
+#endif
 }
 
 bool cmdOpen(cmd_t *p_cmd, uint8_t ch, uint32_t baud)
@@ -59,7 +50,6 @@ bool cmdReceivePacket(cmd_t *p_cmd)
   bool ret = false;
   uint8_t rx_data;
 
-
   if (uartAvailable(p_cmd->ch) > 0)
   {
     rx_data = uartRead(p_cmd->ch);
@@ -69,19 +59,28 @@ bool cmdReceivePacket(cmd_t *p_cmd)
     return false;
   }
 
-  if (millis()-p_cmd->pre_time >= 100) // Timeout //
+  if (millis()-p_cmd->pre_time >= 100)
   {
     p_cmd->state = CMD_STATE_WAIT_STX;
   }
   p_cmd->pre_time = millis();
 
-  switch(p_cmd->state) // state machine //
+  switch(p_cmd->state)
   {
     case CMD_STATE_WAIT_STX:
       if (rx_data == CMD_STX)
       {
-        p_cmd->state = CMD_STATE_WAIT_CMD;
+        p_cmd->state = CMD_CHECK_ID;
         p_cmd->rx_packet.check_sum = 0;
+      }
+      break;
+
+    case CMD_CHECK_ID:
+      if (rx_data == p_cmd->boot_id)
+      {
+      	p_cmd->rx_packet.id = rx_data;
+        p_cmd->rx_packet.check_sum ^= rx_data;
+        p_cmd->state = CMD_STATE_WAIT_CMD;
       }
       break;
 
@@ -115,12 +114,12 @@ bool cmdReceivePacket(cmd_t *p_cmd)
 
       if (p_cmd->rx_packet.length > 0)
       {
-        p_cmd->index = 0; // for check number data //
+        p_cmd->index = 0;
         p_cmd->state = CMD_STATE_WAIT_DATA;
       }
       else
       {
-        p_cmd->state = CMD_STATE_WAIT_CHECKSUM; // if len  0, CMD_STATE_WAIT_DATA ignore//
+        p_cmd->state = CMD_STATE_WAIT_CHECKSUM;
       }
       break;
 
@@ -142,7 +141,7 @@ bool cmdReceivePacket(cmd_t *p_cmd)
     case CMD_STATE_WAIT_ETX:
       if (rx_data == CMD_ETX)
       {
-        if (p_cmd->rx_packet.check_sum == p_cmd->rx_packet.check_sum_recv) //check sum error check//
+        if (p_cmd->rx_packet.check_sum == p_cmd->rx_packet.check_sum_recv)
         {
           ret = true;
         }
@@ -159,9 +158,11 @@ void cmdSendCmd(cmd_t *p_cmd, uint8_t cmd, uint8_t *p_data, uint32_t length)
   uint32_t index;
 
 
+
   index = 0;
 
   p_cmd->tx_packet.buffer[index++] = CMD_STX;
+  p_cmd->tx_packet.buffer[index++] = p_cmd->boot_id;
   p_cmd->tx_packet.buffer[index++] = cmd;
   p_cmd->tx_packet.buffer[index++] = CMD_DIR_M_TO_S;
   p_cmd->tx_packet.buffer[index++] = CMD_OK;
@@ -175,12 +176,20 @@ void cmdSendCmd(cmd_t *p_cmd, uint8_t cmd, uint8_t *p_data, uint32_t length)
 
   uint8_t check_sum = 0;
 
-  for (int i=0; i<length + 5; i++)  // +5 는 packet.buffer[0~4] 까지 제외 //
+  for (int i=0; i<length + CMD_DATA_LEN; i++)
   {
     check_sum ^= p_cmd->tx_packet.buffer[i+1];
   }
+
   p_cmd->tx_packet.buffer[index++] = check_sum;
+
   p_cmd->tx_packet.buffer[index++] = CMD_ETX;
+
+//  for (int j=0; j<9; j++) // test //
+//  {
+//    printf("Send Tx %d : %x \n " , j, p_cmd->tx_packet.buffer[j] );
+//
+//  }
 
 
   uartWrite(p_cmd->ch, p_cmd->tx_packet.buffer, index);
@@ -190,10 +199,10 @@ void cmdSendResp(cmd_t *p_cmd, uint8_t cmd, uint8_t err_code, uint8_t *p_data, u
 {
   uint32_t index;
 
-
   index = 0;
 
   p_cmd->tx_packet.buffer[index++] = CMD_STX;
+  p_cmd->tx_packet.buffer[index++] = p_cmd->boot_id;
   p_cmd->tx_packet.buffer[index++] = cmd;
   p_cmd->tx_packet.buffer[index++] = CMD_DIR_S_TO_M;
   p_cmd->tx_packet.buffer[index++] = err_code;
@@ -207,7 +216,7 @@ void cmdSendResp(cmd_t *p_cmd, uint8_t cmd, uint8_t err_code, uint8_t *p_data, u
 
   uint8_t check_sum = 0;
 
-  for (int i=0; i<length + 5; i++)
+  for (int i=0; i<length + CMD_DATA_LEN; i++)
   {
     check_sum ^= p_cmd->tx_packet.buffer[i+1];
   }

@@ -23,21 +23,13 @@ WORD wRefModeVoltage, wRefModeVoltage1, wRefModeVoltage2, wRefModeVoltage3, wRef
 WORD wRefModeVoltage6, wRefModeVoltage7, wRefModeVoltage8, wRefModeVoltage9, wRefModeVoltage10;
 char UartTx[32] ={0};
 
-wiz_NetInfo gWIZNETINFO = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0x49},
 
-            .ip = {192, 168, 0, 125},
-
-            .sn = {255, 255, 255, 0},
-
-            .gw = {192, 168, 0, 1},
-
-            .dns = {8, 8, 8, 8},
-
-            .dhcp = NETINFO_STATIC};
 #endif
 
 void apInit(void)
 {
+	uint8_t id = 0;
+
 	 //cliOpen(_DEF_UART1, 57600);
 	 uartOpen(_DEF_UART2, 57600);
 	 cliOpen(_DEF_UART3, 115200);
@@ -53,44 +45,21 @@ uint16_t count;
 void apMain(void)
 {
   uint32_t pre_time, pre_baud;
-  uint32_t led_blink_time = 1000;
+  uint32_t led_blink_time = 2000;
   uint8_t loopback_Cnt;
 	uint8_t buffer[256]= {0,};
 
   pre_baud = uartGetBaud(_DEF_UART2);
   pre_time = millis();
 
-//  if(resetGetCount() >= 2)
-//  {
-//    led_blink_time = 2000;
-//  }
-
 
 	while(1)
 	{
-		if(millis()-pre_time >= led_blink_time) //
+		if(millis()-pre_time >= led_blink_time)
 		{
 			pre_time = millis();
 		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 		}
-	#if 0
-	  if(uartAvailable(_DEF_UART3) > 0)
-	  {
-			uint8_t rx_data;
-			pre_time = millis();
-
-			rx_data = uartRead(_DEF_UART3);
-
-			uartPrintf(_DEF_UART3, "RxData1111222233334444444444555555555555 : %c 0x%x\n", rx_data, rx_data);
-
-			uartPrintf(_DEF_UART3, "Time %d ms\n", millis()-pre_time );
-
-			count++;
-			logPrintf("No.%d  Time Date   \t: %s: %s \r\n", count, __TIME__,__DATE__ );
-
-
-	  }
-	#endif
 
 
 	#ifdef _USE_HW_W5500
@@ -115,19 +84,63 @@ void apMain(void)
 void cliBoot(cli_args_t *args)
 {
   bool ret = false;
+  uint8_t id;
+
 
 
   if (args->argc == 1 && args->isStr(0, "info") == true)
   {
+
     firm_version_t *p_boot_ver = (firm_version_t *)(FLASH_ADDR_BOOT_VER);
 
+    id =  *(uint8_t *)0x08070000;
 
-    cliPrintf("boot ver   : %s\n", p_boot_ver->version);
-    cliPrintf("boot name  : %s\n", p_boot_ver->name);
-    cliPrintf("boot param : 0x%X\n", rtcbackupRegRead(0));
+    cliPrintf("\n");
+  	cliPrintf("boot id     : 0x%x\n", id);
+    cliPrintf("boot ver    : %s\n", p_boot_ver->version);
+    cliPrintf("boot name   : %s\n", p_boot_ver->name);
+    cliPrintf("boot param  : 0x%X\n", rtcbackupRegRead(0));
 
     ret = true;
   }
+
+
+  if (args->argc == 2 && args->isStr(0, "id") == true)
+  {
+
+  	 uint32_t data ;
+  	 data    = (uint32_t) args->getData(1);
+
+  	if(data <= 9 && data >= 1)
+  	{
+			if ( flashErase(0x08070000, 1) == true)
+			{
+				delay(100);
+
+				if( flashWrite(0x08070000, (uint8_t *)&data, 1) == true )
+				{
+						cliPrintf("flash write OK\n");
+						delay(100);
+						NVIC_SystemReset(); // 안하면 cli 기능이 활성화 안됨..//
+				}
+				else
+				{
+						cliPrintf("flash write fail\n");
+				}
+			}
+			else
+			{
+					cliPrintf("flash erase fail\n");
+			}
+  	}
+  	else
+  	{
+  		cliPrintf("flash id range err ::  0x01~0x09\n");
+  	}
+
+     ret = true;
+  }
+
 
   if (args->argc == 1 && args->isStr(0, "jump_boot") == true)
   {
@@ -146,13 +159,10 @@ void cliBoot(cli_args_t *args)
 
 
 
-
-
-
-//
   if (ret != true)
   {
     cliPrintf("boot info\n");
+    cliPrintf("boot id 0xid // 0x31 ~ 0x39\n");
     cliPrintf("boot jump_boot\n");
     cliPrintf("boot jump_fw\n");
   }

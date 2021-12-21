@@ -9,6 +9,7 @@
 #include "ap.h"
 #include "boot.h"
 #include "log.h"
+#include "flash.h"
 
 
 cmd_t cmd;
@@ -18,6 +19,7 @@ void apInit(void)
 
   bool run_boot = false;
   uint8_t reg = 0;
+  uint8_t data[0] = {0};
 
   reg = rtcbackupRegRead(1);
 
@@ -56,6 +58,20 @@ void apInit(void)
 
 	 cmdInit(&cmd);
 	 cmdOpen(&cmd, _DEF_UART3, 115200);
+
+
+	 cmd.boot_id =  *(uint8_t *)0x08070000;
+
+	 if(cmd.boot_id == 0xFF)
+	 {
+		 data[0] = (uint8_t)0x01;
+	   flashWrite(0x08070000, data , 1 );
+	 }
+
+	 cmd.boot_id = *(uint8_t *)0x08070000;
+
+
+
 }
 
 UART_HandleTypeDef huart2;

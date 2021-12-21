@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "hw.h"
 #include "uart.h"
+#include "gpio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

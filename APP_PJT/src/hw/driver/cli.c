@@ -11,6 +11,7 @@
 
 #include "cli.h"
 #include "uart.h"
+#include "modbus.h"
 
 #ifdef _USE_HW_CLI
 
@@ -87,8 +88,10 @@ typedef struct
 
 
 cli_t   cli_node;
+extern UART_HandleTypeDef huart2;
+extern DMA_HandleTypeDef hdma_usart2_rx;
 
-
+extern WORD wRefModeVoltage3;
 
 static bool cliUpdate(cli_t *p_cli, uint8_t rx_data);    // 한바이트씩 받아서 한 라인 업데이트 하는 기능//
 static void cliLineClean(cli_t *p_cli);                  // 엔터를 쳣을때 클리어 시키는 기능
@@ -192,6 +195,8 @@ void cliShowPrompt(cli_t *p_cli)
   uartPrintf(p_cli->ch, CLI_PROMPT_STR);
 }
 
+static uint8_t check_on_flag, check_off_flag ;
+
 bool cliMain(void)
 {
   if (cli_node.is_open != true)
@@ -199,10 +204,44 @@ bool cliMain(void)
     return false;
   }
 
-  if (uartAvailable(cli_node.ch) > 0) // 실제적으로 한바이트 이상 들어오면 Update 함수를 실행해서 계속 업데이트 해주는 역활
+#if 1
+  if (wRefModeVoltage3 == 1)
   {
-    cliUpdate(&cli_node, uartRead(cli_node.ch));
+
+  	//__HAL_DMA_ENABLE(&hdma_usart2_rx);
+  	if (check_on_flag == 0)
+  	{
+  		check_on_flag  = 1;
+  		check_off_flag = 0;
+  		cliOpen(_DEF_UART3, 115200);
+  	}
+
+    if (uartAvailable(cli_node.ch) > 0) // 실제적으로 한바이트 이상 들어오면 Update 함수를 실행해서 계속 업데이트 해주는 역활
+    {
+      cliUpdate(&cli_node, uartRead(cli_node.ch));
+    }
+
   }
+  else
+  {
+  	if (check_off_flag == 0)
+  	{
+  		check_on_flag  = 0;
+  		check_off_flag = 1;
+  		HAL_UART_DeInit(&huart2);
+  	}
+  	//__HAL_DMA_DISABLE(&hdma_usart2_rx);
+    //	__HAL_DMA_RESET_HANDLE_STATE(&hdma_usart2_rx);
+  }
+#else
+
+    if (uartAvailable(cli_node.ch) > 0) // 실제적으로 한바이트 이상 들어오면 Update 함수를 실행해서 계속 업데이트 해주는 역활
+    {
+      cliUpdate(&cli_node, uartRead(cli_node.ch));
+    }
+
+#endif
+
 
   return true;
 }

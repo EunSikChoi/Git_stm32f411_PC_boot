@@ -7,22 +7,15 @@
 
 
 #include "boot.h"
+#include "cmd.h"
 
 
-#define BOOT_CMD_READ_BOOT_VERSION      0x00
-#define BOOT_CMD_READ_BOOT_NAME         0x01
-#define BOOT_CMD_READ_FIRM_VERSION      0x02
-#define BOOT_CMD_READ_FIRM_NAME         0x03
-#define BOOT_CMD_FLASH_ERASE            0x04
-#define BOOT_CMD_FLASH_WRITE            0x05
-#define BOOT_CMD_JUMP_TO_FW             0x08
-#define BOOT_CMD_LED_CONTROL            0x10
 
 static cmd_t cmd;
 
 bool bootInit(uint8_t channel, char *port_name, uint32_t baud)
 {
-  bool ret = true;
+  bool ret = false;
 
 
   cmdInit(&cmd);
@@ -45,6 +38,7 @@ bool bootInit(uint8_t channel, char *port_name, uint32_t baud)
     ret = cmdOpen(&cmd, channel, baud);
     if (ret == true)
     {
+    	ret = true;
       break;
     }
     delay(2000);
@@ -80,7 +74,7 @@ uint8_t bootCmdReadBootVersion( uint8_t *p_version)
   }
   else
   {
-    err_code = p_cmd->error;
+    err_code = CMD_FALSE; // p_cmd->error // not receive error
   }
 
   return err_code;
@@ -102,7 +96,7 @@ uint8_t bootCmdReadBootName(uint8_t *p_str)
   }
   else
   {
-    err_code = p_cmd->error;
+    err_code = CMD_FALSE; // p_cmd->error // not receive error
   }
 
   return err_code;
@@ -124,7 +118,7 @@ uint8_t bootCmdReadFirmVersion(uint8_t *p_version)
   }
   else
   {
-    err_code = p_cmd->error;
+    err_code = CMD_FALSE; // p_cmd->error // not receive error
   }
 
   return err_code;
@@ -146,7 +140,7 @@ uint8_t bootCmdReadFirmName(uint8_t *p_str)
   }
   else
   {
-    err_code = p_cmd->error;
+    err_code = CMD_FALSE; // p_cmd->error // not receive error
   }
 
   return err_code;
@@ -157,7 +151,7 @@ uint8_t bootCmdFlashErase(uint32_t addr, uint32_t length, uint32_t timeout)
   bool ret;
   uint8_t err_code = CMD_OK;
   cmd_t *p_cmd = &cmd;
-  uint8_t tx_buf[8];
+  uint8_t tx_buf[CMD_LENGTH];
 
 
   tx_buf[0] = (uint8_t)(addr >>  0);
@@ -171,7 +165,7 @@ uint8_t bootCmdFlashErase(uint32_t addr, uint32_t length, uint32_t timeout)
   tx_buf[7] = (uint8_t)(length >> 24);
 
 
-  ret = cmdSendCmdRxResp(p_cmd, BOOT_CMD_FLASH_ERASE, tx_buf, 8, timeout);
+  ret = cmdSendCmdRxResp(p_cmd, BOOT_CMD_FLASH_ERASE, tx_buf, CMD_LENGTH, timeout);
 
 
   if (ret == true && p_cmd->rx_packet.error == CMD_OK)
@@ -217,10 +211,10 @@ uint8_t bootCmdFlashWrite(uint32_t addr, uint8_t *p_data, uint32_t length, uint3
 
   for (int i=0; i<length; i++)
   {
-    tx_buf[8+i] = p_data[i];
+    tx_buf[CMD_LENGTH + i] = p_data[i];
   }
 
-  ret = cmdSendCmdRxResp(p_cmd, BOOT_CMD_FLASH_WRITE, tx_buf, 8+length, timeout);
+  ret = cmdSendCmdRxResp(p_cmd, BOOT_CMD_FLASH_WRITE, tx_buf, CMD_LENGTH + length, timeout);
   if (ret == true && p_cmd->error == CMD_OK)
   {
     err_code = CMD_OK;

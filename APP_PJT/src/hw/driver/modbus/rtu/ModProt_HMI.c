@@ -1262,8 +1262,6 @@ void HmiLoop(BYTE bPort, WORD wSel, uart_tbl_t *p_uart_tbl)
 		}
 	}
 
-	//_485_RX_ENB;
-
 	if (RTUFrameCheck(bPort))
 	{
 
@@ -1273,8 +1271,6 @@ void HmiLoop(BYTE bPort, WORD wSel, uart_tbl_t *p_uart_tbl)
 		commPortData[bPort].fTx = TRUE;
 
 		bErr = CommandParse(pBRx, pBTx);
-
-	//	_485_TX_ENB;
 
 		__HAL_UART_ENABLE_IT(p_uart_tbl->p_huart, UART_IT_TC);   //UART TX INT Enable//
 

@@ -15,6 +15,7 @@ extern "C" {
 
 #include "def.h"
 
+
 typedef struct
 {
   uint32_t in;
@@ -22,6 +23,7 @@ typedef struct
   uint32_t len;
   uint32_t size;
   uint8_t *p_buf;
+  uint8_t id;
 
 }qbuffer_t;
 
